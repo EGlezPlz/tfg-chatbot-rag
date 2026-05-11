@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  web-insti:
+    image: nginx:alpine
+    container_name: web-insti-elena
+    networks:
+      - red_ia
+    ports:
+      - "80:80"
+    volumes:
+      - .:/code
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    restart: unless-stopped
+
+
+networks:
+  red_ia:
+    external: true
+
+
+# sudo docker network create red_ia

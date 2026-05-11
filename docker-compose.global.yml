@@ -1,0 +1,18 @@
+services:
+  fastapi-fase2:
+    build: ./fastapi-backend
+    container_name: fastapi-fase2
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./fastapi-backend/app:/app/app
+    restart: unless-stopped
+    networks:
+      - red_ia
+    extra_hosts:
+      - "qdrant:host-gateway"
+      - "ollama:host-gateway"
+
+networks:
+  red_ia:
+    external: true

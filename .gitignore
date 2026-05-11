@@ -1,0 +1,61 @@
+# Datos persistentes
+data/
+volumes/
+infra/qdrant/qdrant_storage/
+infra/**/postgres_storage/
+infra/**/storage/
+infra/**/cache/
+infra/**/data/
+infra/**/models/
+.env
+.env.*
+*.log
+*.db
+
+# Node/Vue
+node_modules/
+dist/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+scraping/venv/
+
+# Docker
+*.log
+
+# Rutas
+infra/n8n/postgres_storage/
+infra/Ollama/Ollama_Data/
+
+# Patrones
+*/postgres_storage/
+*/Ollama_Data/
+*.log
+.env
+
+# Datos persistentes Qdrant
+infra/qdrant/qdrant_storage/
+
+# n8n y Postgres
+infra/n8n/postgres_storage/
+infra/**/storage/
+infra/**/data/
+
+# Ollama
+infra/Ollama/
+infra/**/cache/
+infra/**/models/
+
+# Entornos y secretos
+.env
+.env.*
+*.log
+*.save
+
+
+# Reglas
+scraping/*.gguf
+scraping/venv/

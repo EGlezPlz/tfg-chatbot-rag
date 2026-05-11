@@ -1,0 +1,49 @@
+:root {
+    /* Typos */
+    --font-heading: 'Montserrat', sans-serif;
+    --font-body: 'Roboto', sans-serif;
+
+    /* Corporate Colors */
+    --color-primary: #5d7682;
+    --color-primary-dark: #4a5e68;
+    --color-text-main: #40536e;
+    --color-text-light: #a6b5be;
+    --color-action: #f7a90a;
+    --color-action-hover: #d68f00;
+    /* Darker orange for hover */
+    --color-white: #ffffff;
+    --color-bg-light: #f8f9fa;
+
+    /* Service Colors */
+    --color-service-centralitas: #79346e;
+    --color-service-cuadros: #59493c;
+    --color-service-inmovilizadores: #0083a9;
+    --color-service-direcciones: #6c7950;
+    --color-service-abs: #b08938;
+    --color-service-airbags: #5e87b8;
+    --color-service-unidades: #8d475f;
+    --color-service-navegacion: #925e3e;
+    --color-service-potenciacion: #1b6c7f;
+    --color-service-prestamo: #e9534f;
+    --color-service-consultas: #f7a90a;
+    /* Reusing action color for visibility */
+
+    /* Spacing */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    --spacing-xxl: 64px;
+
+    /* Layout */
+    --container-max-width: 1200px;
+    --header-height: 80px;
+
+    /* Effects */
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --transition: all 0.3s ease;
+}

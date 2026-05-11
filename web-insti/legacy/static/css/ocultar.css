@@ -1,0 +1,58 @@
+*{
+	margin: 0;
+	padding: 0;
+}
+
+#contenedor{
+	width: 50%;
+	margin: auto;
+}
+
+#caja{
+	position: absolute;
+	width: 100%;
+	margin: auto;
+	height: 0px;
+	background: #f0ad4e;
+	box-shadow: 10px 10px 3px #D8D8D8;
+	opacity: 0.9;
+	transition: height .4s;
+	z-index: 999;
+}
+
+#caja:hover{
+	opacity: 1;
+	background: #f7a90a;
+}
+
+#boton{
+	padding: 10px;
+	width: 95px;
+	cursor: pointer;
+	margin-top: 10px;
+	margin-bottom: 10px;
+	opacity: .5;
+	filter: alpha(opacity=50);
+	display: none;
+}
+
+#boton:hover{
+	opacity: 1;
+	filter: alpha(opacity=100);
+}
+
+#boton2{
+	padding: 10px;
+	width: 95px;
+	cursor: pointer;
+	margin-top: 10px;
+	margin-bottom: 10px;
+	opacity: .5;
+	filter: alpha(opacity=50);
+	display: none;
+}
+
+#boton2:hover{
+	opacity: 1;
+	filter: alpha(opacity=100);
+}
