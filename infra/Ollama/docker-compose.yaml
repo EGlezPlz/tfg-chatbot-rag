@@ -1,0 +1,31 @@
+version: '3.6'
+
+services:
+  openWebUI:
+    image: ghcr.io/open-webui/open-webui:latest    #v0.7.2
+    restart: unless-stopped
+    ports:
+      - "3000:8080"
+    networks:
+      - red_ia
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./open-webui-local:/app/backend/data
+
+  ollama:
+    image: ollama/ollama:latest    #0.15.0
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    networks:
+      - red_ia
+    volumes:
+      - ./Ollama_Data/:/root/.ollama
+
+networks:
+  red_ia:
+    external: true
+
+
+# sudo docker network create red_ia
