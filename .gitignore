@@ -1,18 +1,11 @@
-# Datos persistentes
-data/
-volumes/
-infra/qdrant/qdrant_storage/
-infra/**/postgres_storage/
-infra/**/storage/
-infra/**/cache/
-infra/**/data/
-infra/**/models/
+# Secrets y temporales
 .env
 .env.*
 *.log
+*.save
 *.db
 
-# Node/Vue
+# Node / frontend
 node_modules/
 dist/
 
@@ -22,55 +15,11 @@ __pycache__/
 .venv/
 venv/
 scraping/venv/
-
-# Docker
-*.log
-
-# Rutas
-infra/n8n/postgres_storage/
-infra/Ollama/Ollama_Data/
-
-# Patrones
-*/postgres_storage/
-*/Ollama_Data/
-*.log
-.env
-
-# Datos persistentes Qdrant
-infra/qdrant/qdrant_storage/
-
-# n8n y Postgres
-infra/n8n/postgres_storage/
-infra/**/storage/
-infra/**/data/
-
-# Ollama
-infra/Ollama/
-infra/**/cache/
-infra/**/models/
-
-# Entornos y secretos
-.env
-.env.*
-*.log
-*.save
-
-
-# Reglas
-scraping/*.gguf
-scraping/venv/
-
-# Python
-venv/
-.venv/
-scraping/venv/
 scraping/*.gguf
 
-# Secrets
-.env
-.env.*
-*.log
-*.save
+# Datos genéricos
+data/
+volumes/
 
 # n8n
 infra/n8n/postgres_storage/
@@ -78,7 +27,7 @@ infra/n8n/n8n/
 infra/n8n/shared/*
 !infra/n8n/shared/.gitkeep
 
-# qdrant
+# Qdrant
 infra/qdrant/qdrant_storage/
 !infra/qdrant/docker-compose.yaml
 !infra/qdrant/.gitkeep
