@@ -59,3 +59,34 @@ infra/**/models/
 # Reglas
 scraping/*.gguf
 scraping/venv/
+
+# Python
+venv/
+.venv/
+scraping/venv/
+scraping/*.gguf
+
+# Secrets
+.env
+.env.*
+*.log
+*.save
+
+# n8n
+infra/n8n/postgres_storage/
+infra/n8n/n8n/
+infra/n8n/shared/*
+!infra/n8n/shared/.gitkeep
+
+# qdrant
+infra/qdrant/qdrant_storage/
+!infra/qdrant/docker-compose.yaml
+!infra/qdrant/.gitkeep
+
+# Ollama
+infra/Ollama/Ollama_Data/
+infra/Ollama/open-webui-local/
+infra/Ollama/**/cache/
+infra/Ollama/**/models/
+!infra/Ollama/docker-compose.yaml
+!infra/Ollama/.gitkeep
