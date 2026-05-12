@@ -1,6 +1,5 @@
 # Secrets y temporales
 .env
-.env.*
 *.log
 *.save
 *.db
