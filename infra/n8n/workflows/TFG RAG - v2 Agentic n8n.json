@@ -1,0 +1,537 @@
+{
+  "name": "TFG RAG - v2 Agentic n8n",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "# Flujo RAG del chatbot VenancIA\nWebhook → validación → detección de intención → embeddings → recuperación Qdrant → respuesta con Ollama/Agente → webhook de salida",
+        "height": 208,
+        "width": 336
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1344,
+        -528
+      ],
+      "typeVersion": 1,
+      "id": "2c11ab8c-ce28-4ec3-bf30-6bd2b389e8e9",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "Entrada esperada:\n- message\n- session_id\n- opcionalmente context o history si se añadiesen finalmente",
+        "height": 128,
+        "width": 336
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1344,
+        -288
+      ],
+      "typeVersion": 1,
+      "id": "93cdfaee-2164-4c43-9db2-72dc24c62196",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chat-agente",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1328,
+        48
+      ],
+      "id": "73ed25b8-f73e-4e7e-b5e5-66372b751cde",
+      "name": "Webhook - Entrada chat",
+      "webhookId": "b96b3260-9042-4d51-8763-43e447ded29c"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "462d7722-47f5-453b-b3d1-497170944cd9",
+              "name": "question",
+              "value": "={{ $json.body.question || $json.question || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "151ee612-7cbf-43c4-ae9a-0ccfb6ee51d2",
+              "name": "session_id",
+              "value": "={{ $json.body.session_id || $json.session_id || \"anon-session\" }}",
+              "type": "string"
+            },
+            {
+              "id": "a681a472-6749-40d0-9c69-a5d9d386bba7",
+              "name": "timestamp",
+              "value": "={{ $now }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1120,
+        48
+      ],
+      "id": "99842b7a-5e29-4912-b3a5-18a05f8fbe3e",
+      "name": "Set - Normalizar entrada"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a57bd19f-3faa-49e3-85b2-1e97915818dd",
+              "leftValue": "={{ $json.question }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -912,
+        48
+      ],
+      "id": "cf430227-bf02-4a6e-a44d-7f03567f0f79",
+      "name": "IF - Pregunta válida"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"ok\": false,\n  \"error\": \"Falta el campo message\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -656,
+        496
+      ],
+      "id": "877f1081-cb29-4b6e-a0ad-fd2e19296af1",
+      "name": "Respond - Error entrada"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.17.0.1:11434/api/embed ",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"nomic-embed-text\",\n  \"input\": \"{{ $('Set - Normalizar entrada').first().json.question }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -448,
+        -192
+      ],
+      "id": "4fd07f2b-1ad0-4a62-9815-9ca4ac632f06",
+      "name": "HTTP Request - Embedding pregunta"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://qdrant:6333/collections/corpus_centro/points/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ Object.assign(\n  {\n    vector: $json.vector,\n    limit: 5,\n    with_payload: true\n  },\n  $json.qdrantFilter ? { filter: $json.qdrantFilter } : {}\n) }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        160,
+        -192
+      ],
+      "id": "066cb635-92f3-4758-bc4d-08c9850a3433",
+      "name": "HTTP Request - Buscar en Qdrant"
+    },
+    {
+      "parameters": {
+        "jsCode": "const emb = $json.embeddings;\nconst vector = Array.isArray(emb[0]) ? emb[0] : emb;\n\nreturn [\n  {\n    json: {\n      question: $('Set - Normalizar entrada').first().json.question,\n      session_id: $('Set - Normalizar entrada').first().json.session_id,\n      vector,\n      vector_length: Array.isArray(vector) ? vector.length : -1,\n      first_values: Array.isArray(vector) ? vector.slice(0, 5) : []\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -256,
+        -192
+      ],
+      "id": "5926b1c1-b159-4825-be20-eaa312864ba6",
+      "name": "Code - Preparar vector para Qdrant"
+    },
+    {
+      "parameters": {
+        "jsCode": "const qdrantBody = $json.body || {};\nconst results = Array.isArray(qdrantBody.result) ? qdrantBody.result : [];\nconst intent = $('Code - Detectar intención').first().json.intent || \"general\";\nconst question = ($('Set - Normalizar entrada').first().json.question || \"\").toLowerCase();\n\nconst requestedEtapas = [];\nif (question.includes(\"bachillerato\")) requestedEtapas.push(\"bachillerato\");\nif (\n  question.includes(\"formación profesional\") ||\n  question.includes(\"formacion profesional\") ||\n  question.includes(\" fp\") ||\n  question.includes(\"ciclos formativos\")\n) {\n  requestedEtapas.push(\"fp\");\n}\n\nconst uniqueRequestedEtapas = [...new Set(requestedEtapas)];\n\nconst rawChunks = results.map((item, index) => {\n  const payload = item.payload || {};\n\n  return {\n    original_index: index + 1,\n    score: item.score ?? 0,\n    source: payload.documento || payload.document || `doc_${index + 1}`,\n    text: (payload.pageContent || \"\").trim(),\n    tipo: (payload.tipo || \"\").toString().toLowerCase(),\n    etapa: (payload.etapa || \"\").toString().toLowerCase(),\n    curso: (payload.curso || \"\").toString().toLowerCase()\n  };\n}).filter(chunk => chunk.text.length > 0);\n\nfunction isCompatibleWithIntent(chunk, intent) {\n  const haystack = (chunk.source + \" \" + chunk.text).toLowerCase();\n\n  if (intent === \"matricula\") {\n    if (chunk.tipo && chunk.tipo !== \"matricula\") return false;\n    if (/admisi[oó]n extraordinaria|vacantes|solicitud|petici[oó]n/i.test(haystack)) return false;\n  }\n\n  if (intent === \"admision\") {\n    if (chunk.tipo && chunk.tipo !== \"admision\") return false;\n  }\n\n  if (intent === \"oferta\") {\n    if (chunk.tipo && chunk.tipo !== \"oferta\") return false;\n  }\n\n  if (intent === \"calendario\") {\n    if (chunk.tipo && chunk.tipo !== \"calendario\") return false;\n  }\n\n  return true;\n}\n\nfunction isCompatibleWithEtapa(chunk, requestedEtapas) {\n  if (requestedEtapas.length === 0) return true;\n  if (!chunk.etapa) return false;\n  return requestedEtapas.includes(chunk.etapa);\n}\n\nfunction keywordBoost(chunk, intent) {\n  const haystack = (chunk.source + \" \" + chunk.text).toLowerCase();\n  let boost = 0;\n\n  if (intent === \"matricula\") {\n    if (/matr[ií]cul|formaliz/.test(haystack)) boost += 0.15;\n    if (/admisi[oó]n|vacantes|solicitud/.test(haystack)) boost -= 0.12;\n  } else if (intent === \"admision\") {\n    if (/admisi[oó]n|solicitud/.test(haystack)) boost += 0.15;\n    if (/matr[ií]cul|formaliz/.test(haystack)) boost -= 0.05;\n  } else if (intent === \"oferta\") {\n    if (/oferta|ciclos|formaci[oó]n profesional|grado medio|grado superior/.test(haystack)) boost += 0.15;\n    if (/calendario|matr[ií]cul|admisi[oó]n/.test(haystack)) boost -= 0.05;\n  } else if (intent === \"calendario\") {\n    if (/calendario|pruebas extraordinarias|evaluaci[oó]n|junio|septiembre/.test(haystack)) boost += 0.15;\n  }\n\n  if (uniqueRequestedEtapas.length > 0 && chunk.etapa && uniqueRequestedEtapas.includes(chunk.etapa)) {\n    boost += 0.10;\n  }\n\n  return boost;\n}\n\nfunction mentionsOtherStages(chunk, requestedEtapas) {\n  if (requestedEtapas.length === 0) return false;\n\n  const text = (chunk.source + \" \" + chunk.text).toLowerCase();\n  const detected = [];\n\n  if (/infantil|primaria/.test(text)) detected.push(\"primaria\");\n  if (/eso|educación secundaria obligatoria|educacion secundaria obligatoria/.test(text)) detected.push(\"eso\");\n  if (/bachillerato/.test(text)) detected.push(\"bachillerato\");\n  if (/formación profesional|formacion profesional|ciclos formativos|grado medio|grado superior/.test(text)) detected.push(\"fp\");\n\n  const uniqueDetected = [...new Set(detected)];\n\n  return uniqueDetected.some(stage => !requestedEtapas.includes(stage));\n}\n\nconst filtered = rawChunks\n  .filter(chunk => isCompatibleWithIntent(chunk, intent))\n  .filter(chunk => isCompatibleWithEtapa(chunk, uniqueRequestedEtapas))\n  .filter(chunk => !mentionsOtherStages(chunk, uniqueRequestedEtapas));\n\nconst preferredByIntent = intent === \"matricula\"\n  ? filtered.filter(chunk => chunk.tipo === \"matricula\")\n  : filtered;\n\nconst baseSet = preferredByIntent.length > 0\n  ? preferredByIntent\n  : (filtered.length > 0 ? filtered : rawChunks.filter(chunk => isCompatibleWithEtapa(chunk, uniqueRequestedEtapas)));\n\nconst rescored = baseSet.map(chunk => ({\n  ...chunk,\n  adjustedScore: chunk.score + keywordBoost(chunk, intent)\n}));\n\nrescored.sort((a, b) => b.adjustedScore - a.adjustedScore);\n\nconst perSourceCount = {};\nconst selected = [];\n\nfor (const chunk of rescored) {\n  const count = perSourceCount[chunk.source] || 0;\n\n  if (count < 2 && selected.length < 4) {\n    selected.push(chunk);\n    perSourceCount[chunk.source] = count + 1;\n  }\n}\n\nif (selected.length < 4) {\n  for (const chunk of rescored) {\n    const alreadyIncluded = selected.some(\n      s => s.source === chunk.source && s.text === chunk.text\n    );\n\n    if (!alreadyIncluded) {\n      selected.push(chunk);\n    }\n\n    if (selected.length >= 4) {\n      break;\n    }\n  }\n}\n\nconst finalChunks = selected.map((chunk, idx) => ({\n  index: idx + 1,\n  score: chunk.score,\n  adjustedScore: chunk.adjustedScore,\n  source: chunk.source,\n  tipo: chunk.tipo,\n  etapa: chunk.etapa,\n  curso: chunk.curso,\n  text: chunk.text.slice(0, 1800)\n}));\n\nconst sourceSummary = [...new Set(finalChunks.map(c => c.source))].join(\" | \");\n\nconst lowConfidence = finalChunks.length === 0 || (\n  intent === \"matricula\" &&\n  !finalChunks.some(c => c.tipo === \"matricula\")\n);\n\nconst context = finalChunks\n  .map(chunk =>\n    `[${chunk.index}] Fuente: ${chunk.source}\\nTipo: ${chunk.tipo || \"desconocido\"} | Etapa: ${chunk.etapa || \"desconocida\"} | Curso: ${chunk.curso || \"desconocido\"}\\n${chunk.text}`\n  )\n  .join(\"\\n\\n---\\n\\n\");\n\nreturn [{\n  json: {\n    question: $('Set - Normalizar entrada').first().json.question,\n    session_id: $('Set - Normalizar entrada').first().json.session_id,\n    intent,\n    lowConfidence,\n    sourceSummary,\n    requestedEtapas: uniqueRequestedEtapas,\n    context,\n    chunks: finalChunks,\n    total_chunks: finalChunks.length\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        352,
+        -192
+      ],
+      "id": "d8322c5b-ec2f-463e-ad6b-46993e37a3bf",
+      "name": "Code - Construir contexto"
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        320,
+        128
+      ],
+      "id": "7ef62abc-7550-466d-bb50-7890e87357ce",
+      "name": "Webhook - Salida"
+    },
+    {
+      "parameters": {
+        "jsCode": "const question = $('Set - Normalizar entrada').first().json.question || '';\nconst session_id = $('Set - Normalizar entrada').first().json.session_id || '';\nconst agentOutput = $('AI Agent').first().json.output || '';\nconst chunks = $('Code - Construir contexto').first().json.chunks || [];\n\nconst sources = chunks.map(c => ({\n  source: c.source,\n  score: c.score\n}));\n\nreturn [{\n  json: {\n    question,\n    answer: agentOutput,\n    session_id,\n    sources\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        64,
+        128
+      ],
+      "id": "f98a5e3b-bda7-4ca6-b524-0bb4097b9456",
+      "name": "Code - Respuesta final"
+    },
+    {
+      "parameters": {
+        "jsCode": "const q = (($json.question || \"\") + \"\").toLowerCase();\n\nlet intent = \"general\";\n\nif (q.includes(\"matrícul\") || q.includes(\"matricula\")) {\n  intent = \"matricula\";\n} else if (q.includes(\"admis\")) {\n  intent = \"admision\";\n} else if (q.includes(\"ofert\") || q.includes(\"ciclos\")) {\n  intent = \"oferta\";\n} else if (q.includes(\"calendario\") || q.includes(\"pruebas extraordinarias\")) {\n  intent = \"calendario\";\n}\n\nreturn [{\n  json: {\n    ...$json,\n    intent\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -656,
+        -192
+      ],
+      "id": "b16359b9-f3ea-433d-a26d-b61d44a93744",
+      "name": "Code - Detectar intención"
+    },
+    {
+      "parameters": {
+        "jsCode": "const intent = $json.intent || \"general\";\nconst question = ($json.question || \"\").toLowerCase();\n\nconst must = [];\nconst should = [];\n\nif (intent === \"matricula\") {\n  must.push({\n    key: \"tipo\",\n    match: { value: \"matricula\" }\n  });\n} else if (intent === \"admision\") {\n  must.push({\n    key: \"tipo\",\n    match: { value: \"admision\" }\n  });\n} else if (intent === \"oferta\") {\n  must.push({\n    key: \"tipo\",\n    match: { value: \"oferta\" }\n  });\n} else if (intent === \"calendario\") {\n  must.push({\n    key: \"tipo\",\n    match: { value: \"calendario\" }\n  });\n}\n\nif (question.includes(\"bachillerato\")) {\n  should.push({\n    key: \"etapa\",\n    match: { value: \"bachillerato\" }\n  });\n}\n\nif (\n  question.includes(\"formación profesional\") ||\n  question.includes(\"formacion profesional\") ||\n  question.includes(\" fp\") ||\n  question.includes(\"ciclos formativos\")\n) {\n  should.push({\n    key: \"etapa\",\n    match: { value: \"fp\" }\n  });\n}\n\nlet qdrantFilter = null;\n\nif (must.length > 0 || should.length > 0) {\n  qdrantFilter = {};\n  if (must.length > 0) qdrantFilter.must = must;\n  if (should.length > 0) qdrantFilter.should = should;\n}\n\nreturn [{\n  json: {\n    ...$json,\n    qdrantFilter\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -48,
+        -192
+      ],
+      "id": "6db862bd-38fa-401a-bc1e-34feba1ffcc0",
+      "name": "Code - Construir filtro Qdrant"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Pregunta:\n{{ $json.question }}\n\nContexto:\n{{ $json.context }}\n\nDevuelve solo JSON válido con esta estructura:\n{\n  \"answer\": \"texto breve\",\n  \"needs_clarification\": true/false,\n  \"source_hint\": \"fuente breve o vacío\"\n}\n\nReglas:\n- Usa solo el contexto.\n- Si la pregunta es ambigua, needs_clarification debe ser true y answer debe ser una aclaración breve.\n- Si no hay respuesta exacta, answer debe ser \"No consta en el contexto proporcionado.\"\n- Si la pregunta pide inicio o fin de un periodo, responde solo con la fecha correspondiente.\n- Si piden fuentes, usa solo las del contexto.\n- No añadas texto fuera del JSON.",
+        "options": {
+          "systemMessage": "/no-think\nEres un asistente de información del IES Venancio Blanco para ESO, Bachillerato y FP.\n\nEl contexto que recibes puede provenir de dos tipos de fuentes:\n- Fuentes del CENTRO (IES): secretaría, oferta formativa, admisión/matrícula del IES, becas, orientación, convivencia, horarios, etc.\n- Fuentes de EDUCACYL / JUNTA: trámites on-line de la Junta de Castilla y León, calendario escolar oficial, matrícula on-line para familias, normativa autonómica.\n\nCada fragmento de contexto incluye su fuente entre corchetes al inicio. Úsala para identificar el origen.\n\nÁMBITOS DE RESPUESTA:\n- Organización académica, horarios, evaluación, tutorías, orientación, convivencia y normas.\n- Admisión y matrícula (tanto del centro como de Educacyl cuando el contexto lo incluya).\n- Oferta formativa, actividades e información general del centro.\n- Becas y ayudas para el alumnado.\n\nREGLAS:\n1. Responde SOLO con información explícita en el contexto proporcionado.\n2. No inventes, no infieras y no uses conocimiento general externo.\n3. Si el contexto no contiene la respuesta exacta, answer debe ser exactamente: \"No consta en el contexto proporcionado.\"\n4. Si la pregunta es ambigua o incompleta y hay varias interpretaciones razonables, marca needs_clarification como true y sugiere en answer qué datos necesitas.\n5. Si la pregunta pide una fecha concreta y el contexto contiene un intervalo, responde solo con la fecha que corresponde al verbo (inicio → primera fecha, fin → última fecha).\n6. No mezcles información de etapas distintas (ESO/Bachillerato/FP) salvo que el usuario lo pida explícitamente y el contexto lo permita.\n7. En preguntas mixtas IES + Educacyl, estructura el answer en dos partes diferenciadas: \"En el IES:\" y \"En Educacyl:\" usando solo lo que conste en el contexto de cada fuente.\n8. Si varias fuentes del contexto se contradicen entre sí, indícalo en source_hint.\n9. Si el contexto cubre el tema pero de forma parcial (p. ej. solo hay una mención breve), responde con lo que hay y añade en source_hint: \"información parcial en el contexto\".\n10. Cuando la respuesta sea una fecha o la frase de no constancia, no añadas explicación adicional.\n11. No mezcles chunks de fuentes IES con fuentes Educacyl para construir una respuesta que ninguna de las dos sostiene por sí sola.\n\nFORMATO OBLIGATORIO DE SALIDA — solo JSON, sin texto fuera:\n{\n  \"answer\": \"texto breve\",\n  \"needs_clarification\": true/false,\n  \"source_hint\": \"fuente breve o vacío\"\n}",
+          "maxIterations": 3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -320,
+        128
+      ],
+      "id": "4ef2a309-1766-42a5-ae79-efa0d8cbe61a",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama3.2:latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        -368,
+        320
+      ],
+      "id": "033e9f06-89ca-41b4-bd3e-901c7ef0a70c",
+      "name": "Ollama Chat Model1",
+      "credentials": {
+        "ollamaApi": {
+          "id": "PJ0UpFEmcA7T76PU",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Webhook - Entrada chat').item.json.session_id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        -224,
+        416
+      ],
+      "id": "ded33706-f358-4076-896c-8ed12f8fce5c",
+      "name": "Simple Memory"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook - Entrada chat": {
+      "main": [
+        [
+          {
+            "node": "Set - Normalizar entrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - Normalizar entrada": {
+      "main": [
+        [
+          {
+            "node": "IF - Pregunta válida",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Pregunta válida": {
+      "main": [
+        [
+          {
+            "node": "Code - Detectar intención",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond - Error entrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond - Error entrada": {
+      "main": [
+        []
+      ]
+    },
+    "HTTP Request - Embedding pregunta": {
+      "main": [
+        [
+          {
+            "node": "Code - Preparar vector para Qdrant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Preparar vector para Qdrant": {
+      "main": [
+        [
+          {
+            "node": "Code - Construir filtro Qdrant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request - Buscar en Qdrant": {
+      "main": [
+        [
+          {
+            "node": "Code - Construir contexto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Construir contexto": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook - Salida": {
+      "main": [
+        []
+      ]
+    },
+    "Code - Respuesta final": {
+      "main": [
+        [
+          {
+            "node": "Webhook - Salida",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Detectar intención": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request - Embedding pregunta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Construir filtro Qdrant": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request - Buscar en Qdrant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code - Respuesta final",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "f28ecbf9-863d-4467-9825-97867f47aec0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "86e50149658661312a9e0b35558d84f6c6d3da797f552a9657fe0558ca40cdef"
+  },
+  "id": "1xOK78hWQINwYyBD",
+  "tags": [
+    {
+      "updatedAt": "2026-05-14T09:34:00.400Z",
+      "createdAt": "2026-05-14T09:34:00.400Z",
+      "id": "Q60Va6RTpfgXVCfi",
+      "name": "ies-venancio-blanco"
+    },
+    {
+      "updatedAt": "2026-05-14T09:33:58.423Z",
+      "createdAt": "2026-05-14T09:33:58.423Z",
+      "id": "9y5Vhng9gDtvqIKO",
+      "name": "consulta"
+    },
+    {
+      "updatedAt": "2026-05-14T09:33:45.702Z",
+      "createdAt": "2026-05-14T09:33:45.702Z",
+      "id": "oxllljcRW6DIpd6C",
+      "name": "chatbot"
+    },
+    {
+      "updatedAt": "2026-05-14T09:33:42.582Z",
+      "createdAt": "2026-05-14T09:33:42.582Z",
+      "id": "8tODyLcKR8EWE9Dk",
+      "name": "rag"
+    },
+    {
+      "updatedAt": "2026-05-14T09:33:40.164Z",
+      "createdAt": "2026-05-14T09:33:40.164Z",
+      "id": "JMbMBMgzU1hKpoh1",
+      "name": "tfg"
+    }
+  ]
+}

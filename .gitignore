@@ -38,3 +38,21 @@ infra/Ollama/**/cache/
 infra/Ollama/**/models/
 !infra/Ollama/docker-compose.yaml
 !infra/Ollama/.gitkeep
+
+# Archivos personales
+links_importantes.txt
+arquitectura-admin-chatbot-tfg.md
+
+# Carpeta web-insti raíz (duplicados, el proyecto real está en web-insti/web-insti)
+web-insti/docker-compose.yaml
+web-insti/Dockerfile
+web-insti/index.html
+web-insti/nginx.conf
+web-insti/package.json
+web-insti/package-lock.json
+web-insti/public/
+web-insti/src/
+web-insti/dist/
+
+# PRUEBAS internas
+PRUEBAS/

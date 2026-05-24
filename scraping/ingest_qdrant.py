@@ -1,65 +1,186 @@
 #!/usr/bin/env python3
+"""
+ingest_qdrant.py
+Ingesta de uno o varios ficheros JSON de corpus en Qdrant usando embeddings de Ollama.
+
+Uso:
+    python3 ingest_qdrant.py corpus_ies.json corpus_jcyl.json
+    # o, sin parámetros, usa corpus_ies.json por defecto
+"""
+
 import json
-import uuid
+import sys
+import time
+from typing import List
+
 import requests
+from qdrant_client import QdrantClient
+from qdrant_client.models import VectorParams, Distance, PointStruct
 
+# Configuración Ollama (igual que en main.py)
 OLLAMA_URL = "http://localhost:11434"
-QDRANT_URL = "http://localhost:6333"
-COLLECTION  = "corpus_centro"
-EMBED_MODEL = "nomic-embed-text:latest"
-CORPUS_FILE = "corpus_ies.json"
-BATCH_SIZE  = 10
+EMBED_MODEL = "nomic-embed-text"
 
-def get_embedding(text):
+# Configuración Qdrant (igual que en main.py)
+QDRANT_HOST = "localhost"
+QDRANT_PORT = 6333
+COLLECTION = "corpus_centro"
+VECTOR_SIZE = 768  # dimensiones del modelo nomic-embed-text
+DISTANCE = Distance.COSINE
+
+
+def get_embedding(texto: str) -> list[float]:
+    """Obtiene el embedding de un texto usando Ollama."""
     resp = requests.post(
         f"{OLLAMA_URL}/api/embeddings",
-        json={"model": EMBED_MODEL, "prompt": text},
-        timeout=60
+        json={"model": EMBED_MODEL, "prompt": texto},
+        timeout=60,
     )
     resp.raise_for_status()
-    return resp.json()["embedding"]
+    data = resp.json()
+    return data["embedding"]
 
-def upsert_batch(points):
-    resp = requests.put(
-        f"{QDRANT_URL}/collections/{COLLECTION}/points",
-        json={"points": points},
-        headers={"Content-Type": "application/json"},
-        timeout=30
+
+def cargar_corpus(rutas: List[str]) -> list[dict]:
+    """Carga y concatena varios ficheros JSON de corpus."""
+    corpus_total: list[dict] = []
+    for ruta in rutas:
+        print(f"📂 Cargando corpus desde {ruta}...")
+        with open(ruta, "r", encoding="utf-8") as f:
+            datos = json.load(f)
+            print(f"   ✅ {len(datos)} chunks leídos")
+            corpus_total.extend(datos)
+    print(f"\n📦 Corpus combinado: {len(corpus_total)} chunks totales\n")
+    return corpus_total
+
+
+def clasificar_metadata(documento: str, texto: str) -> dict:
+    """Clasifica un chunk en metadatos simples para mejorar el filtrado en Qdrant."""
+    base = f"{documento or ''} {texto or ''}".lower()
+
+    # tipo
+    tipo = "general"
+    if "admisión" in base or "admision" in base:
+        tipo = "admision"
+    elif "matriculación" in base or "matricula" in base or "matrícula" in base:
+        tipo = "matricula"
+    elif "calendario" in base:
+        tipo = "calendario"
+    elif (
+        "oferta" in base
+        or "ciclos formativos" in base
+        or "grado medio" in base
+        or "grado superior" in base
+    ):
+        tipo = "oferta"
+
+
+    # etapa
+    etapa = "general"
+
+    if "bachillerato" in base:
+        etapa = "bachillerato"
+    elif (
+        "formación profesional" in base
+        or "formacion profesional" in base
+        or "ciclos formativos" in base
+        or "fp" in base
+    ):
+        etapa = "fp"
+    elif "eso" in base:
+        etapa = "eso"
+
+    # curso
+    curso = "desconocido"
+    if "2025/2026" in base or "25/26" in base:
+        curso = "2025/2026"
+    elif "2026/2027" in base or "26/27" in base:
+        curso = "2026/2027"
+
+    return {
+        "tipo": tipo,
+        "etapa": etapa,
+        "curso": curso,
+    }
+
+
+def recrear_coleccion(client: QdrantClient):
+    """Elimina y recrea la colección en Qdrant con la configuración deseada."""
+    collections = client.get_collections().collections
+    nombres = {c.name for c in collections}
+
+    if COLLECTION in nombres:
+        print(f"ℹ️  La colección '{COLLECTION}' ya existe. Se eliminará y recreará...")
+        client.delete_collection(COLLECTION)
+
+    print(f"🛠  Creando colección '{COLLECTION}' en Qdrant...")
+    client.recreate_collection(
+        collection_name=COLLECTION,
+        vectors_config=VectorParams(size=VECTOR_SIZE, distance=DISTANCE),
     )
-    resp.raise_for_status()
+    print("   ✅ Colección creada\n")
+
 
 def main():
-    with open(CORPUS_FILE, "r", encoding="utf-8") as f:
-        corpus = json.load(f)
+    # Rutas recibidas por CLI o valor por defecto
+    rutas = sys.argv[1:]
+    if not rutas:
+        rutas = ["corpus_ies.json"]
+        print(
+            "ℹ️  No se han pasado rutas por parámetro. Usando corpus_ies.json por defecto.\n"
+        )
 
-    print(f"📂 Corpus cargado: {len(corpus)} chunks\n")
-    batch = []
-    errores = 0
+    corpus = cargar_corpus(rutas)
 
-    for i, item in enumerate(corpus):
-        try:
-            vector = get_embedding(item["pageContent"])
-        except Exception as e:
-            print(f"  ⚠️  Chunk {i} — error embedding: {e}")
-            errores += 1
+    client = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
+
+    recrear_coleccion(client)
+
+    puntos: list[PointStruct] = []
+    total = len(corpus)
+    print(
+        f"🚀 Iniciando generación de embeddings e ingesta en Qdrant ({total} chunks)...\n"
+    )
+
+    for idx, item in enumerate(corpus):
+        texto = item.get("pageContent", "")
+        documento = item.get("documento", "desconocido")
+        metadata = clasificar_metadata(documento, texto)
+
+        if not texto.strip():
             continue
 
-        batch.append({
-            "id":      str(uuid.uuid4()),
-            "vector":  vector,
-            "payload": {"pageContent": item["pageContent"], "documento": item["documento"]}
-        })
+        try:
+            embedding = get_embedding(texto)
+        except Exception as e:
+            print(f"  ⚠️  Error al obtener embedding del chunk {idx}: {e}")
+            continue
 
-        if len(batch) >= BATCH_SIZE:
-            upsert_batch(batch)
-            print(f"  ✅ Chunks {i - BATCH_SIZE + 1}–{i} subidos")
-            batch = []
+        puntos.append(
+            PointStruct(
+                id=idx,
+                vector=embedding,
+                payload={
+                    "pageContent": texto,
+                    "documento": documento,
+                    "tipo": metadata["tipo"],
+                    "etapa": metadata["etapa"],
+                    "curso": metadata["curso"],
+                },
+            )
+        )
 
-    if batch:
-        upsert_batch(batch)
-        print(f"  ✅ Últimos {len(batch)} chunks subidos")
+        # Enviar en lotes para no saturar Qdrant
+        if len(puntos) % 10 == 0 or idx == total - 1:
+            client.upsert(collection_name=COLLECTION, points=puntos)
+            print(f"   ✅ Chunks 0–{idx} subidos ({len(puntos)} puntos en este lote)")
+            puntos = []
+            time.sleep(0.2)
 
-    print(f"\n✅ Ingesta completada: {len(corpus) - errores}/{len(corpus)} chunks indexados")
+    print(
+        f"\n✅ Ingesta completada: {total}/{total} chunks procesados (verificar recuento en Qdrant).\n"
+    )
+
 
 if __name__ == "__main__":
     main()

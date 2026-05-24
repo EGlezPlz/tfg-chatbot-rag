@@ -63,6 +63,70 @@ URLS = [
  	 "url": "https://iesvenancioblanco.es/solicitud-de-titulos/",
 	 "documento": "Secretaría - Solicitud de títulos"
     },
+    {
+         "url": "https://iesvenancioblanco.es/becas-y-ayudas-a-alumnos-de-niveles-postobligatorios-curso-2026-2027/",
+         "documento": "Becas y ayudas postobligatorias 2026-2027"
+    },
+    {
+         "url": "https://iesvenancioblanco.es/releo-plus-y-otras-becas/",
+         "documento": "RELEO PLUS y otras becas"
+    },
+    {
+         "url": "https://iesvenancioblanco.es/ayudas-para-la-adquisicion-de-dispositivos-digitales-2025-2026-convocatoria/",
+         "documento": "Ayudas dispositivos digitales 2025-2026"
+    },
+    {
+         "url": "https://iesvenancioblanco.es/tag/becas/",
+         "documento": "Listado noticias becas"
+    },
+    {
+         "url": "https://www.iesvenancioblanco.es/index.php/17-convivencia/109-reglamento-de-regimen-interior",
+         "documento": "Convivencia - Reglamento de Régimen Interior"
+    },
+    {
+         "url": "https://iesvenancioblanco.es/consejo-escolar/",
+         "documento": "Convivencia - Consejo escolar"
+    },
+    {
+         "url": "https://www.iesvenancioblanco.es/index.php/conocenos/organizacion/consejo-escolar",
+         "documento": "Convivencia - Consejo escolar (detalle)"
+    },
+    {
+         "url": "https://iesvenancioblanco.es/orientacion/",
+         "documento": "Orientación"
+    },
+    {
+         "url": "https://iesvenancioblanco.es/tutores/",
+         "documento": "Tutorías"
+    },
+    {
+         "url": "https://iesvenancioblanco.es/ensenanza-secundaria-obligatoria-eso/",
+         "documento": "ESO - información académica"
+    },
+    {
+         "url": "https://iesvenancioblanco.es/horarios/",
+         "documento": "Horarios generales del centro"
+    },
+    {
+         "url": "https://iesvenancioblanco.es/secretaria-horario-y-atencion-al-publico/",
+         "documento": "Secretaría - Horario y atención al público"
+    },
+    {
+         "url": "https://iesvenancioblanco.es/index.php/informacion-academica/evaluaciones/normativa",
+         "documento": "Evaluación, promoción y titulación"
+    },
+    {
+         "url": "https://iesvenancioblanco.es/wp-content/uploads/2025/11/Propuesta-Curricular_ESO_25-26_Venancio-Blanco.pdf",
+         "documento": "Propuesta Curricular ESO 2025-26"
+    },
+    {
+         "url": "https://iesvenancioblanco.es/wp-content/uploads/2025/11/Propuesta-Curricular_Bach_25-26_Venancio-Blanco.pdf",
+         "documento": "Propuesta Curricular Bachillerato 2025-26"
+    },
+    {
+         "url": "https://iesvenancioblanco.es/wp-content/uploads/2025/09/RRI_2025.pdf",
+         "documento": "Reglamento de Régimen Interior"
+    }
 ]
 
 
