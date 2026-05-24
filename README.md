@@ -92,9 +92,17 @@ cd tfg-chatbot-rag
 
 ### 2. Configurar variables de entorno
 
+**Archivo 1 — raíz del proyecto:**
 ```bash
 cp .env.example .env
-# Editar .env con los valores correspondientes
+# Rellenar POSTGRES_PASSWORD, N8N_ENCRYPTION_KEY y N8N_USER_MANAGEMENT_JWT_SECRET
+# Para generar claves: openssl rand -hex 32
+```
+
+**Archivo 2 — frontend:**
+```bash
+cp web-insti/web-insti/.env.example web-insti/web-insti/.env
+# Establecer VITE_APP_NAME=web-insti y VITE_API_BASE_URL=http://localhost:8001
 ```
 
 ### 3. Inicializar red y volúmenes Docker
