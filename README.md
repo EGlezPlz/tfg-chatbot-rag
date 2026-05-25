@@ -50,34 +50,39 @@ centro y del portal Educacyl de la Junta de Castilla y León.
 
 ## Estructura del proyecto
 
-tfg-chatbot-rag/
-├── arranque.sh                  # Script de inicialización de red y volúmenes
-├── docker-compose.global.yml    # Despliegue del backend FastAPI
-├── fastapi-backend/             # Backend Python/FastAPI
-│   ├── app/
-│   │   └── main.py
-│   ├── Dockerfile
-│   └── requirements.txt
-├── infra/
-│   ├── n8n/                     # Orquestador RAG + PostgreSQL
-│   │   ├── docker-compose.yaml
-│   │   └── workflows/           # Workflow exportado de n8n
-│   ├── Ollama/                  # Modelos LLM locales
-│   │   └── docker-compose.yaml
-│   └── qdrant/                  # Base vectorial
-│       └── docker-compose.yaml
-├── scraping/                    # Scripts de generación del corpus
-│   ├── scraper_ies.py
-│   ├── scraper_jcyl.py
-│   ├── ingest_qdrant.py
-│   ├── corpus_ies.json
-│   └── corpus_jcyl.json
-├── Arcane/                      # Administración de contenedores
-│   └── docker-compose.yaml
-└── web-insti/                   # Frontend Vue 3
-    ├── src/
-    ├── Dockerfile
-    └── vite.config.js
+<details>
+<summary><strong>Estructura del proyecto</strong></summary>
+
+- `tfg-chatbot-rag/`
+  - `arranque.sh` — Script de inicialización de red y volúmenes
+  - `docker-compose.global.yml` — Despliegue del backend FastAPI
+  - `fastapi-backend/` — Backend Python/FastAPI
+    - `app/`
+      - `main.py`
+    - `Dockerfile`
+    - `requirements.txt`
+  - `infra/`
+    - `n8n/` — Orquestador RAG + PostgreSQL
+      - `docker-compose.yaml`
+      - `workflows/` — Workflow exportado de n8n
+    - `Ollama/` — Modelos LLM locales
+      - `docker-compose.yaml`
+    - `qdrant/` — Base vectorial
+      - `docker-compose.yaml`
+  - `scraping/` — Scripts de generación del corpus
+    - `scraper_ies.py`
+    - `scraper_jcyl.py`
+    - `ingest_qdrant.py`
+    - `corpus_ies.json`
+    - `corpus_jcyl.json`
+  - `Arcane/` — Administración de contenedores
+    - `docker-compose.yaml`
+  - `web-insti/` — Frontend Vue 3
+    - `src/`
+    - `Dockerfile`
+    - `vite.config.js`
+
+</details>
 
 ---
 
