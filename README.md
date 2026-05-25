@@ -54,7 +54,8 @@ tfg-chatbot-rag/
 ├── arranque.sh                  # Script de inicialización de red y volúmenes
 ├── docker-compose.global.yml    # Despliegue del backend FastAPI
 ├── fastapi-backend/             # Backend Python/FastAPI
-│   ├── app/main.py
+│   ├── app/
+│   │   └── main.py
 │   ├── Dockerfile
 │   └── requirements.txt
 ├── infra/
@@ -73,11 +74,10 @@ tfg-chatbot-rag/
 │   └── corpus_jcyl.json
 ├── Arcane/                      # Administración de contenedores
 │   └── docker-compose.yaml
-└── web-insti/
-└── web-insti/               # Frontend Vue 3
-├── src/
-├── Dockerfile
-└── vite.config.js
+└── web-insti/                   # Frontend Vue 3
+    ├── src/
+    ├── Dockerfile
+    └── vite.config.js
 
 ---
 
