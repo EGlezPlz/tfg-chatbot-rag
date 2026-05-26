@@ -70,7 +70,7 @@ import logoUrl from '@/assets/images/logo.png'
 const messages = ref([])
 const isLoading = ref(false)
 const lastSources = ref([])
-const sessionId = ref(null)
+const sessionId = ref(crypto.randomUUID())
 const chatBodyRef = ref(null)
 
 const suggestions = [
@@ -108,10 +108,10 @@ async function handleSend(text) {
     sessionId.value = response.session_id ?? sessionId.value
 
     messages.value.push(
-      normalizeMessage(response.respuesta ?? 'No se obtuvo respuesta.', 'assistant')
+      normalizeMessage(response.answer ?? 'No se obtuvo respuesta.', 'assistant')
     )
 
-    lastSources.value = response.fuentes ?? []
+    lastSources.value = response.sources ?? []
   } catch (error) {
     messages.value.push(
       normalizeMessage(
