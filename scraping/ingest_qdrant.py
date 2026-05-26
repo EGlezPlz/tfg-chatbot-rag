@@ -17,15 +17,13 @@ import requests
 from qdrant_client import QdrantClient
 from qdrant_client.models import VectorParams, Distance, PointStruct
 
-# Configuración Ollama (igual que en main.py)
 OLLAMA_URL = "http://localhost:11434"
 EMBED_MODEL = "nomic-embed-text"
 
-# Configuración Qdrant (igual que en main.py)
 QDRANT_HOST = "localhost"
 QDRANT_PORT = 6333
 COLLECTION = "corpus_centro"
-VECTOR_SIZE = 768  # dimensiones del modelo nomic-embed-text
+VECTOR_SIZE = 768
 DISTANCE = Distance.COSINE
 
 
@@ -55,29 +53,31 @@ def cargar_corpus(rutas: List[str]) -> list[dict]:
 
 
 def clasificar_metadata(documento: str, texto: str) -> dict:
-    """Clasifica un chunk en metadatos simples para mejorar el filtrado en Qdrant."""
     base = f"{documento or ''} {texto or ''}".lower()
+    doc = documento.lower()
 
-    # tipo
-    tipo = "general"
-    if "admisión" in base or "admision" in base:
+    # Clasificación por nombre de documento (más fiable que por contenido)
+    if "oferta formativa" in doc or "ciclos formativos" in doc or "cursos de especialización" in doc:
+        tipo = "oferta"
+    elif "matrícula" in doc or "matricula" in doc or "matriculación" in doc:
+        tipo = "matricula"
+    elif "admisión" in doc or "admision" in doc:
         tipo = "admision"
+    elif "calendario" in doc:
+        tipo = "calendario"
+    # Clasificación por contenido como fallback
     elif "matriculación" in base or "matricula" in base or "matrícula" in base:
         tipo = "matricula"
+    elif "admisión" in base or "admision" in base:
+        tipo = "admision"
     elif "calendario" in base:
         tipo = "calendario"
-    elif (
-        "oferta" in base
-        or "ciclos formativos" in base
-        or "grado medio" in base
-        or "grado superior" in base
-    ):
+    elif "oferta" in base or "ciclos formativos" in base or "grado medio" in base or "grado superior" in base:
         tipo = "oferta"
+    else:
+        tipo = "general"
 
-
-    # etapa
     etapa = "general"
-
     if "bachillerato" in base:
         etapa = "bachillerato"
     elif (
@@ -90,17 +90,21 @@ def clasificar_metadata(documento: str, texto: str) -> dict:
     elif "eso" in base:
         etapa = "eso"
 
-    # curso
     curso = "desconocido"
     if "2025/2026" in base or "25/26" in base:
         curso = "2025/2026"
     elif "2026/2027" in base or "26/27" in base:
         curso = "2026/2027"
 
+    origen = "jcyl" if any(
+        x in documento.lower() for x in ["educacyl", "jcyl", "junta"]
+    ) else "ies"
+
     return {
         "tipo": tipo,
         "etapa": etapa,
         "curso": curso,
+        "origen": origen,
     }
 
 
@@ -122,7 +126,6 @@ def recrear_coleccion(client: QdrantClient):
 
 
 def main():
-    # Rutas recibidas por CLI o valor por defecto
     rutas = sys.argv[1:]
     if not rutas:
         rutas = ["corpus_ies.json"]
@@ -166,11 +169,11 @@ def main():
                     "tipo": metadata["tipo"],
                     "etapa": metadata["etapa"],
                     "curso": metadata["curso"],
+                    "origen": metadata["origen"],
                 },
             )
         )
 
-        # Enviar en lotes para no saturar Qdrant
         if len(puntos) % 10 == 0 or idx == total - 1:
             client.upsert(collection_name=COLLECTION, points=puntos)
             print(f"   ✅ Chunks 0–{idx} subidos ({len(puntos)} puntos en este lote)")
