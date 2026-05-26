@@ -37,9 +37,9 @@ export function useChat() {
     try {
       const data = await sendChatMessage(cleanText, sessionId.value)
       sessionId.value = data.session_id ?? sessionId.value
-      messages.value.push({ role: 'bot', text: data.respuesta })
-      lastSources.value = data.fuentes ?? []
-      status.value = data.estado === 'ERROR' ? 'error' : 'idle'
+      messages.value.push({ role: 'bot', text: data.answer })
+      lastSources.value = data.sources ?? []
+      status.value = 'idle'
       return data
     } catch (err) {
       error.value = err
