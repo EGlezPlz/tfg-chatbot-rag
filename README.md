@@ -107,7 +107,7 @@ cp .env.example .env
 **Archivo 2 — frontend:**
 ```bash
 cp web-insti/web-insti/.env.example web-insti/web-insti/.env
-# Establecer VITE_APP_NAME=web-insti y VITE_API_BASE_URL=http://localhost:8001
+# Establecer VITE_APP_NAME=web-insti y VITE_API_BASE_URL=http://localhost:5678/webhook
 ```
 
 ### 3. Inicializar red y volúmenes Docker
