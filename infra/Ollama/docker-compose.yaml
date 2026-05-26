@@ -22,6 +22,8 @@ services:
       - red_ia
     volumes:
       - ./Ollama_Data/:/root/.ollama
+    environment:
+      - OLLAMA_MAX_LOADED_MODELS=1
 
 networks:
   red_ia:

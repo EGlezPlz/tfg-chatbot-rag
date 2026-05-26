@@ -25,7 +25,7 @@ app.add_middleware(
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger("tfg-logs")
 
-OLLAMA_URL = "http://192.168.1.132:11434"
+OLLAMA_URL = "http://172.17.0.1:11434"
 EMBED_MODEL = "nomic-embed-text"
 CHAT_MODEL = "llama3.2"
 QDRANT_HOST = "qdrant"
