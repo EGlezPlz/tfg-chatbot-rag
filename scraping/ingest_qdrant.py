@@ -26,18 +26,16 @@ COLLECTION = "corpus_centro"
 VECTOR_SIZE = 768
 DISTANCE = Distance.COSINE
 
-
 def get_embedding(texto: str) -> list[float]:
     """Obtiene el embedding de un texto usando Ollama."""
     resp = requests.post(
-        f"{OLLAMA_URL}/api/embeddings",
-        json={"model": EMBED_MODEL, "prompt": texto},
+        f"{OLLAMA_URL}/api/embed",
+        json={"model": EMBED_MODEL, "input": texto},
         timeout=60,
     )
     resp.raise_for_status()
     data = resp.json()
-    return data["embedding"]
-
+    return data["embeddings"][0]
 
 def cargar_corpus(rutas: List[str]) -> list[dict]:
     """Carga y concatena varios ficheros JSON de corpus."""
