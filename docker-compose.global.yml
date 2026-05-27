@@ -1,4 +1,6 @@
 services:
+
+  # ─── BACKEND FASTAPI ────────────────────────────────────────────────────────
   fastapi-fase2:
     build: ./fastapi-backend
     container_name: fastapi-fase2
@@ -13,6 +15,108 @@ services:
       - "qdrant:host-gateway"
       - "ollama:host-gateway"
 
+  # ─── FRONTEND VUE ────────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./web-insti/web-insti
+      dockerfile: Dockerfile
+    container_name: venancia-frontend
+    ports:
+      - "3000:80"
+    restart: unless-stopped
+    networks:
+      - red_ia
+    depends_on:
+      - fastapi-fase2
+
+  # ─── QDRANT ──────────────────────────────────────────────────────────────────
+  qdrant:
+    image: qdrant/qdrant:v1.17.0
+    container_name: qdrant
+    ports:
+      - "6333:6333"
+    volumes:
+      - ./infra/qdrant/qdrant_storage:/qdrant/storage
+    restart: unless-stopped
+    networks:
+      - red_ia
+
+  # ─── POSTGRESQL (para n8n) ───────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: n8n-postgres
+    env_file:
+      - ./infra/n8n/.env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - red_ia
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── N8N ─────────────────────────────────────────────────────────────────────
+  n8n:
+    image: n8nio/n8n:2.20.6
+    container_name: n8n
+    env_file:
+      - ./infra/n8n/.env
+    environment:
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_DATABASE: ${POSTGRES_DB}
+      DB_POSTGRESDB_USER: ${POSTGRES_USER}
+      DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD}
+      N8N_BASIC_AUTH_ACTIVE: ${N8N_BASIC_AUTH_ACTIVE}
+      N8N_BASIC_AUTH_USER: ${N8N_BASIC_AUTH_USER}
+      N8N_BASIC_AUTH_PASSWORD: ${N8N_BASIC_AUTH_PASSWORD}
+      N8N_HOST: ${N8N_HOST}
+      N8N_PORT: ${N8N_PORT}
+      N8N_PROTOCOL: ${N8N_PROTOCOL}
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+      WEBHOOK_URL: ${WEBHOOK_URL}
+      OLLAMA_MAX_LOADED_MODELS: 1
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./infra/n8n/workflows:/home/node/.n8n/workflows
+    restart: unless-stopped
+    networks:
+      - red_ia
+    extra_hosts:
+      - "host-gateway:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # ─── OLLAMA ──────────────────────────────────────────────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    networks:
+      - red_ia
+    environment:
+      OLLAMA_MAX_LOADED_MODELS: 1
+
 networks:
   red_ia:
-    external: true
+    driver: bridge
+
+volumes:
+  postgres_data:
+  n8n_data:
+  ollama_data:
