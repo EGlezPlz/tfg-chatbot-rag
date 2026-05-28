@@ -121,14 +121,16 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - arcane_data:/app/data
+    env_file:
+      - ./infra/n8n/.env
     environment:
-      - ARCANE_USER=arcane
-      - ARCANE_PASSWORD=arcane-admin
-      - APP_URL=http://localhost:3552
+      - ARCANE_USER=${ARCANE_USER}
+      - ARCANE_PASSWORD=${ARCANE_PASSWORD}
+      - APP_URL=${ARCANE_APP_URL}
       - PUID=1000
       - PGID=1000
-      - ENCRYPTION_KEY=/unrbo/RsrtmeVA5hSL70V5XQwXB2nkPhWspvAIou9A=
-      - JWT_SECRET=008b2d28c5559d85b2ba731192e6ad7b64964f7799f28889d41fcd9153ee2b05
+      - ENCRYPTION_KEY=${ARCANE_ENCRYPTION_KEY}
+      - JWT_SECRET=${ARCANE_JWT_SECRET}
     restart: unless-stopped
     networks:
       - red_ia
