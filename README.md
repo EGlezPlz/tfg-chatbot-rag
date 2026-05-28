@@ -168,7 +168,7 @@ cd ..
    `infra/n8n/workflows/TFG RAG - v2 Agentic n8n.json`
 4. Activar el workflow con el toggle superior derecho
 5. Ir a **Settings → Credentials** y crear una credencial de tipo **Ollama**  
-   apuntando a `http://172.17.0.1:11434`
+   apuntando a `http://ollama:11434`
 
 ### 8. Verificar el despliegue
 
