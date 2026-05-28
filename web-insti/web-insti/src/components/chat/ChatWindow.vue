@@ -43,7 +43,7 @@
 
       <div v-if="isLoading" class="loading-row">
         <div class="typing-indicator">
-          <span class="thinking-label">Pensando...</span>
+          <span class="thinking-label">{{ loadingPhase }}</span>
           <span></span>
           <span></span>
           <span></span>
@@ -79,6 +79,28 @@ const suggestions = [
   '¿Cómo puedo contactar con el instituto?'
 ]
 
+const loadingPhase = ref('Analizando tu pregunta...')
+
+const phases = [
+  { text: 'Analizando tu pregunta...', delay: 0 },
+  { text: 'Buscando en el corpus...', delay: 6000 },
+  { text: 'Generando respuesta...', delay: 20000 }
+]
+
+let phaseTimers = []
+
+function startLoadingPhases() {
+  loadingPhase.value = phases[0].text
+  phaseTimers = phases.slice(1).map(phase =>
+    setTimeout(() => { loadingPhase.value = phase.text }, phase.delay)
+  )
+}
+
+function clearLoadingPhases() {
+  phaseTimers.forEach(t => clearTimeout(t))
+  phaseTimers = []
+}
+
 function normalizeMessage(text, role) {
   return {
     id: crypto.randomUUID(),
@@ -100,6 +122,7 @@ async function handleSend(text) {
 
   messages.value.push(normalizeMessage(text, 'user'))
   isLoading.value = true
+  startLoadingPhases()
   scrollToBottom()
 
   try {
@@ -120,6 +143,7 @@ async function handleSend(text) {
       )
     )
   } finally {
+    clearLoadingPhases() 
     isLoading.value = false
     scrollToBottom()
   }
