@@ -127,7 +127,7 @@ chmod +x arranque.sh
 ### 4. Levantar todos los servicios
 
 ```bash
-docker compose -f docker-compose.yaml up -d
+docker compose up -d
 ```
 
 Esto levanta en un único comando: **FastAPI · Frontend Vue · Qdrant · PostgreSQL · n8n · Ollama · Arcane**
