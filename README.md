@@ -56,7 +56,7 @@ Castilla y León.
 
 - `tfg-chatbot-rag/`
   - `arranque.sh` — Crea la red externa `red_ia` si no existe
-  - `docker-compose.global.yml` — Compose único, punto de entrada principal
+  - `docker-compose.yaml` — Compose único, punto de entrada principal
   - `fastapi-backend/` — Backend Python/FastAPI
     - `app/`
       - `main.py`
@@ -127,7 +127,7 @@ chmod +x arranque.sh
 ### 4. Levantar todos los servicios
 
 ```bash
-docker compose -f docker-compose.global.yml up -d
+docker compose -f docker-compose.yaml up -d
 ```
 
 Esto levanta en un único comando: **FastAPI · Frontend Vue · Qdrant · PostgreSQL · n8n · Ollama · Arcane**
