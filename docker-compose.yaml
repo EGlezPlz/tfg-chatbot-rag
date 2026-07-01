@@ -134,6 +134,18 @@ services:
     restart: unless-stopped
     networks:
       - red_ia
+      
+   # ─── PANEL ADMINISTRACIÓN (Laravel) ──────────────────────────────────────────
+  admin-panel:
+    build:
+      context: ./admin-panel
+      dockerfile: Dockerfile
+    container_name: venancia-admin
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    networks:
+      - red_ia
 
 networks:
   red_ia:
